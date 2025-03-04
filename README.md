@@ -137,8 +137,10 @@ Conditional Logic
 
 Support for conditions with operators (`>`, `<`, `==`, `!=`, `&&`, `||`, etc.):
 
-    $xtpl->assign('USER_AGE', 20);
-    $xtpl->assign('USER_LOGGED_IN', true);
+    $age = 20;
+    $logged = true;
+    $xtpl->assign('USER_AGE', $age);
+    $xtpl->assign('USER_LOGGED_IN', $logged);
     $xtpl->parse('MAIN');
     $xtpl->out('MAIN');
 
@@ -146,6 +148,26 @@ Support for conditions with operators (`>`, `<`, `==`, `!=`, `&&`, `||`, etc.):
 
     <!-- BEGIN: MAIN -->
     <!-- IF USER_AGE > 18 && USER_LOGGED_IN -->
+        <p>Access granted.</p>
+    <!-- ELSE -->
+        <p>Access denied.</p>
+    <!-- ENDIF -->
+    <!-- END: MAIN -->
+    
+or
+
+    <!-- BEGIN: MAIN -->
+    <!-- IF {USER_AGE} > 18 && {USER_LOGGED_IN} -->
+        <p>Access granted.</p>
+    <!-- ELSE -->
+        <p>Access denied.</p>
+    <!-- ENDIF -->
+    <!-- END: MAIN -->
+    
+or 
+
+    <!-- BEGIN: MAIN -->
+    <!-- IF {PHP.age} > 18 && {PHP.logged} -->
         <p>Access granted.</p>
     <!-- ELSE -->
         <p>Access denied.</p>
