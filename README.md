@@ -92,6 +92,20 @@ Example with nested blocks:
         ['NAME' => 'Alex', 'DETAILS' => ['AGE' => 30]],
         ['NAME' => 'Maria', 'DETAILS' => ['AGE' => 25]]
     ]);
+    $xtpl->array_loop('MAIN.USERS', 'USER', $xtpl->vars['USERS']);
+    $xtpl->parse('MAIN');
+    $xtpl->out('MAIN');
+
+or
+
+    $users = [
+        ['NAME' => 'Alex', 'DETAILS' => ['AGE' => 30]],
+        ['NAME' => 'Maria', 'DETAILS' => ['AGE' => 25]]
+    ];
+    foreach ($users as $user) {
+        $xtpl->assign('USER', $user);
+        $xtpl->parse('MAIN.USERS');
+    }
     $xtpl->parse('MAIN');
     $xtpl->out('MAIN');
 
@@ -99,9 +113,9 @@ Example with nested blocks:
 
     <!-- BEGIN: MAIN -->
     <ul>
-        <!-- BEGIN: user -->
+        <!-- BEGIN: USERS -->
         <li>{USER.NAME} ({USER.DETAILS.AGE} years)</li>
-        <!-- END: user -->
+        <!-- END: USERS -->
     </ul>
     <!-- END: MAIN -->
 
