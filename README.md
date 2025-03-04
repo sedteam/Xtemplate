@@ -54,15 +54,15 @@ Create an `XTemplate` instance, assign variables, parse the template, and output
     
     $xtpl = new XTemplate('templates/example.tpl');
     $xtpl->assign('TITLE', 'Hello, World!');
-    $xtpl->parse('main');
-    $xtpl->out('main');
+    $xtpl->parse('MAIN');
+    $xtpl->out('MAIN');
     ?>
 
 **templates/example.tpl**:
 
-    <!-- BEGIN: main -->
+    <!-- BEGIN: MAIN -->
     <h1>{TITLE}</h1>
-    <!-- END: main -->
+    <!-- END: MAIN -->
 
 **Output**:
 
@@ -79,8 +79,8 @@ Template Syntax
 
 ### Blocks
 
-*   Block start: `<!-- BEGIN: block_name -->`.
-*   Block end: `<!-- END: block_name -->`.
+*   Block start: `<!-- BEGIN: BLOCK_NAME -->`.
+*   Block end: `<!-- END: BLOCK_NAME -->`.
 *   Nested blocks: Supported for complex structures.
 
 Blocks and Variables
@@ -92,18 +92,18 @@ Example with nested blocks:
         ['NAME' => 'Alex', 'DETAILS' => ['AGE' => 30]],
         ['NAME' => 'Maria', 'DETAILS' => ['AGE' => 25]]
     ]);
-    $xtpl->parse('main');
-    $xtpl->out('main');
+    $xtpl->parse('MAIN');
+    $xtpl->out('MAIN');
 
 **templates/example.tpl**:
 
-    <!-- BEGIN: main -->
+    <!-- BEGIN: MAIN -->
     <ul>
         <!-- BEGIN: user -->
         <li>{USER.NAME} ({USER.DETAILS.AGE} years)</li>
         <!-- END: user -->
     </ul>
-    <!-- END: main -->
+    <!-- END: MAIN -->
 
 **Output**:
 
@@ -125,18 +125,18 @@ Support for conditions with operators (`>`, `<`, `==`, `!=`, `&&`, `||`, etc.):
 
     $xtpl->assign('USER_AGE', 20);
     $xtpl->assign('USER_LOGGED_IN', true);
-    $xtpl->parse('main');
-    $xtpl->out('main');
+    $xtpl->parse('MAIN');
+    $xtpl->out('MAIN');
 
 **templates/example.tpl**:
 
-    <!-- BEGIN: main -->
+    <!-- BEGIN: MAIN -->
     <!-- IF USER_AGE > 18 && USER_LOGGED_IN -->
         <p>Access granted.</p>
     <!-- ELSE -->
         <p>Access denied.</p>
     <!-- ENDIF -->
-    <!-- END: main -->
+    <!-- END: MAIN -->
 
 **Output**:
 
@@ -148,14 +148,14 @@ Callback Functions
 Apply PHP functions to variables within the template:
 
     $xtpl->assign('TEXT', 'hello, world');
-    $xtpl->parse('main');
-    $xtpl->out('main');
+    $xtpl->parse('MAIN');
+    $xtpl->out('MAIN');
 
 **templates/example.tpl**:
 
-    <!-- BEGIN: main -->
+    <!-- BEGIN: MAIN -->
     <p>{TEXT|strtoupper}</p>
-    <!-- END: main -->
+    <!-- END: MAIN -->
 
 **Output**:
 
@@ -180,7 +180,7 @@ Error Handling
 
 Example error output:
 
-    <!-- XTemplate Errors for Block: main -->
+    <!-- XTemplate Errors for Block: MAIN -->
     <b>[XTemplate Errors]</b><ul><li>parse: blockname [unknown] does not exist (Context: File: example.tpl, Block: unknown, Time: 2025-03-04 12:00:00)</li></ul>
 
 Performance Optimization
