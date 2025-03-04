@@ -1,7 +1,7 @@
 XTemplate - PHP Templating Engine
 =================================
 
-![License: LGPL/BSD](https://img.shields.io/badge/License-LGPL%20%2F%20BSD-blue.svg) ![PHP Version](https://img.shields.io/badge/PHP-5.0%2B-brightgreen.svg)
+![License: LGPL/BSD](https://img.shields.io/badge/License-LGPL%20%2F%20BSD-blue.svg) ![PHP Version](https://img.shields.io/badge/PHP-5.4%2B-brightgreen.svg)
 
 ## Table of Contents
 
