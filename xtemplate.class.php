@@ -160,7 +160,7 @@ class XTemplate
 	 *
 	 * @var string Block start delimiter
 	 */
-	public $block_start_delim = '<!-- ';
+	public $block_start_delim = '<!--';
 
 	/**
 	 * Template block end delimiter
@@ -344,61 +344,23 @@ class XTemplate
 	 */
 	protected $_ignore_missing_blocks = true;
 
-	// NEW: Added in 2025 version for conditional logic
 	/**
-	 * IF condition start delimiter
-	 *
-	 * @var string IF condition start delimiter
+	 * Keyword for starting an IF condition
+	 * @var string
 	 */
-	public $if_start_delim = '<!-- IF ';
+	public $if_delim = 'IF';
 
-	// NEW: Added in 2025 version for conditional logic
 	/**
-	 * IF condition end delimiter
-	 *
-	 * @var string IF condition end delimiter
+	 * Keyword for ELSE
+	 * @var string
 	 */
-	public $if_end_delim = ' -->';
+	public $else_delim = 'ELSE';
 
-	// NEW: Added in 2025 version for conditional logic
 	/**
-	 * ELSE delimiter
-	 *
-	 * @var string ELSE delimiter
+	 * Keyword for ending an IF condition
+	 * @var string
 	 */
-	public $else_delim = '<!-- ELSE -->';
-
-	// NEW: Added in 2025 version for conditional logic
-	/**
-	 * ENDIF delimiter
-	 *
-	 * @var string ENDIF delimiter
-	 */
-	public $endif_delim = '<!-- ENDIF -->';
-
-	// NEW: Added in 2025 version for conditional logic
-	/**
-	 * IF condition pattern
-	 *
-	 * @var string IF condition pattern
-	 */
-	public $if_preg = '`<!-- IF (.*?) -->`';
-
-	// NEW: Added in 2025 version for conditional logic
-	/**
-	 * ELSE pattern
-	 *
-	 * @var string ELSE pattern
-	 */
-	public $else_preg = '`<!-- ELSE -->`';
-
-	// NEW: Added in 2025 version for conditional logic
-	/**
-	 * ENDIF pattern
-	 *
-	 * @var string ENDIF pattern
-	 */
-	public $endif_preg = '`<!-- ENDIF -->`';
+	public $endif_delim = 'ENDIF';
 
 	// NEW: Added in 2025 version for RPN evaluation
 	/**
@@ -1496,7 +1458,7 @@ class XTemplate
 	 */
 	protected function _tokenize($expression)
 	{
-		$pattern = '`\s*(?:(\d*\.\d+|\d+)|([+\-*/%()]|&&|\|\||==|!=|<=|>=|<|>)|(?:' . preg_quote($this->tag_start_delim) . ')?([A-Za-z0-9\._\x7f-\xff]+)(?:' . preg_quote($this->tag_end_delim) . ')?)\s*`';
+		$pattern = '`\s*(?:(\d*\.\d+|\d+)|([+\-*/%()]|&&|\s*\|\|\s*|==|!=|<=|>=|<|>)|(?:"([^"]*)")|(?:\'([^\']*)\')|([A-Za-z0-9\._\x7f-\xff]+))\s*`';
 		preg_match_all($pattern, $expression, $matches, PREG_SET_ORDER);
 
 		$tokens = [];
@@ -1504,10 +1466,13 @@ class XTemplate
 			if (isset($match[1]) && $match[1] !== '') {
 				$tokens[] = ['type' => 'number', 'value' => $match[1]];
 			} elseif (isset($match[2]) && $match[2] !== '') {
-				$tokens[] = ['type' => 'operator', 'value' => $match[2]];
+				$tokens[] = ['type' => 'operator', 'value' => trim($match[2])]; // Убираем пробелы из оператора
 			} elseif (isset($match[3]) && $match[3] !== '') {
-				$var_name = trim($match[0], $this->tag_start_delim . $this->tag_end_delim . " \t\n\r\0\x0B");
-				$tokens[] = ['type' => 'variable', 'value' => $var_name];
+				$tokens[] = ['type' => 'string', 'value' => $match[3]];
+			} elseif (isset($match[4]) && $match[4] !== '') {
+				$tokens[] = ['type' => 'string', 'value' => $match[4]];
+			} elseif (isset($match[5]) && $match[5] !== '') {
+				$tokens[] = ['type' => 'variable', 'value' => $match[5]];
 			}
 		}
 
@@ -1523,33 +1488,63 @@ class XTemplate
 	 */
 	protected function _shunting_yard($tokens)
 	{
-		$output = [];
-		$stack = [];
+		$output = []; // Output queue for RPN
+		$stack = [];  // Operator stack
 
 		foreach ($tokens as $token) {
-			if ($token['type'] === 'number' || $token['type'] === 'variable') {
+			// Handle operands (numbers, variables, strings) by adding them directly to output
+			if ($token['type'] === 'number' || $token['type'] === 'variable' || $token['type'] === 'string') {
 				$output[] = $token;
 			} elseif ($token['type'] === 'operator') {
-				while (
-					!empty($stack) &&
-					$stack[count($stack) - 1]['type'] === 'operator' &&
-					$this->operator_precedence[$stack[count($stack) - 1]['value']] >= $this->operator_precedence[$token['value']]
-				) {
-					$output[] = array_pop($stack);
+				if ($token['value'] === '(') {
+					// Push opening parenthesis onto the stack
+					$stack[] = $token;
+				} elseif ($token['value'] === ')') {
+					// Pop operators from stack to output until matching '(' is found
+					while (!empty($stack) && $stack[count($stack) - 1]['value'] !== '(') {
+						$output[] = array_pop($stack);
+					}
+					if (!empty($stack) && $stack[count($stack) - 1]['value'] === '(') {
+						// Remove the matching '(' from the stack
+						array_pop($stack);
+					} else {
+						// Error: no matching opening parenthesis
+						$this->_set_error("Mismatched parentheses: no matching opening parenthesis", "File: {$this->filename}");
+						return [];
+					}
+				} else {
+					// Handle other operators (e.g., +, -, *, /, ==, &&, ||)
+					while (
+						!empty($stack) &&
+						$stack[count($stack) - 1]['type'] === 'operator' &&
+						$stack[count($stack) - 1]['value'] !== '(' && // Skip if top is '('
+						isset($this->operator_precedence[$stack[count($stack) - 1]['value']]) && // Check if top operator has precedence
+						isset($this->operator_precedence[$token['value']]) && // Check if current operator has precedence
+						$this->operator_precedence[$stack[count($stack) - 1]['value']] >= $this->operator_precedence[$token['value']]
+					) {
+						$output[] = array_pop($stack);
+					}
+					// Push the current operator onto the stack
+					$stack[] = $token;
 				}
-				$stack[] = $token;
-			} elseif ($token['value'] === '(') {
-				$stack[] = $token;
-			} elseif ($token['value'] === ')') {
-				while (!empty($stack) && $stack[count($stack) - 1]['value'] !== '(') {
-					$output[] = array_pop($stack);
-				}
-				array_pop($stack);
 			}
 		}
 
+		// Empty the stack into output, checking for unmatched parentheses
 		while (!empty($stack)) {
-			$output[] = array_pop($stack);
+			$top = array_pop($stack);
+			if ($top['value'] === '(') {
+				// Error: unclosed parenthesis found
+				$this->_set_error("Mismatched parentheses: unclosed parenthesis", "File: {$this->filename}");
+				return [];
+			}
+			$output[] = $top;
+		}
+
+		// Debug: Log the resulting RPN expression
+		if ($this->debug) {
+			$rpn_str = implode(' ', array_map(function($t) { return $t['value']; }, $output));
+			error_log("RPN for expression: $rpn_str");
 		}
 
 		return $output;
@@ -1594,6 +1589,8 @@ class XTemplate
 
 		foreach ($rpn as $token) {
 			if ($token['type'] === 'number') {
+				$stack[] = (float)$token['value']; // Явно приводим к числу
+			} elseif ($token['type'] === 'string') {
 				$stack[] = $token['value'];
 			} elseif ($token['type'] === 'variable') {
 				$value = $this->_get_variable_value($token['value']);
@@ -1706,64 +1703,53 @@ class XTemplate
 		$pos = 0;
 		$length = mb_strlen($content);
 
-		while ($pos < $length) {
-			$if_start = mb_strpos($content, $this->if_start_delim, $pos);
-			$else_pos = mb_strpos($content, $this->else_delim, $pos);
-			$endif_pos = mb_strpos($content, $this->endif_delim, $pos);
+		$if_full_delim = $this->block_start_delim . ' ' . $this->if_delim . ' ';  // <!-- IF 
+		$else_full_delim = $this->block_start_delim . ' ' . $this->else_delim . ' ' . $this->block_end_delim;  // <!-- ELSE -->
+		$endif_full_delim = $this->block_start_delim . ' ' . $this->endif_delim . ' ' . $this->block_end_delim;  // <!-- ENDIF -->
 
-			if ($if_start === false && $else_pos === false && $endif_pos === false) {
+		while ($pos < $length) {
+			$if_start = mb_strpos($content, $if_full_delim, $pos);
+			$else_pos = mb_strpos($content, $else_full_delim, $pos);
+			$endif_pos = mb_strpos($content, $endif_full_delim, $pos);
+
+			$next_positions = array_filter([
+				'if' => $if_start !== false ? $if_start : null,
+				'else' => $else_pos !== false ? $else_pos : null,
+				'endif' => $endif_pos !== false ? $endif_pos : null
+			], function ($val) { return $val !== null; });
+
+			if (empty($next_positions)) {
 				$tokens[] = mb_substr($content, $pos);
 				break;
 			}
 
-			$next_pos = $length;
-			if ($if_start !== false && $if_start < $next_pos) $next_pos = $if_start;
-			if ($else_pos !== false && $else_pos < $next_pos) $next_pos = $else_pos;
-			if ($endif_pos !== false && $endif_pos < $next_pos) $next_pos = $endif_pos;
+			$next_pos = min($next_positions);
+			$next_type = array_search($next_pos, $next_positions);
 
 			if ($pos < $next_pos) {
 				$tokens[] = mb_substr($content, $pos, $next_pos - $pos);
 			}
 
-			if ($next_pos === $if_start) {
-				$if_end = mb_strpos($content, $this->if_end_delim, $if_start);
+			if ($next_type === 'if') {
+				$if_end = mb_strpos($content, $this->block_end_delim, $if_start);
 				if ($if_end === false) {
+					$this->_set_error("Unclosed IF block detected, start at position: $if_start", "File: {$this->filename}");
 					$tokens[] = mb_substr($content, $if_start);
 					break;
 				}
-				$condition = mb_substr($content, $if_start + mb_strlen($this->if_start_delim), $if_end - ($if_start + mb_strlen($this->if_start_delim)));
+				$condition = mb_substr($content, $if_start + mb_strlen($if_full_delim), $if_end - ($if_start + mb_strlen($if_full_delim)));
 				$tokens[] = ['type' => 'if', 'condition' => trim($condition)];
-				$pos = $if_end + mb_strlen($this->if_end_delim);
-			} elseif ($next_pos === $else_pos) {
+				$pos = $if_end + mb_strlen($this->block_end_delim);
+			} elseif ($next_type === 'else') {
 				$tokens[] = ['type' => 'else'];
-				$pos = $else_pos + mb_strlen($this->else_delim);
-			} elseif ($next_pos === $endif_pos) {
+				$pos = $else_pos + mb_strlen($else_full_delim);
+			} elseif ($next_type === 'endif') {
 				$tokens[] = ['type' => 'endif'];
-				$pos = $endif_pos + mb_strlen($this->endif_delim);
+				$pos = $endif_pos + mb_strlen($endif_full_delim);
 			}
 		}
 
-		$result = $this->_process_tokens($tokens);
-
-		$nesting = 0;
-		$last_unclosed_condition = null;
-		foreach ($tokens as $token) {
-			if (is_array($token) && $token['type'] === 'if') {
-				$nesting++;
-				$last_unclosed_condition = $token['condition'];
-			} elseif (is_array($token) && $token['type'] === 'endif') {
-				$nesting--;
-				if ($nesting < 0) {
-					$nesting = 0;
-				}
-				$last_unclosed_condition = null;
-			}
-		}
-		if ($nesting > 0 && $last_unclosed_condition !== null) {
-			$this->_set_error("Unclosed IF block detected: <!-- IF {$last_unclosed_condition} -->", "File: {$this->filename}");
-		}
-
-		return $result;
+		return $this->_process_tokens($tokens);
 	}
 
 	// NEW: Added in 2025 version for conditional logic
@@ -1790,6 +1776,7 @@ class XTemplate
 				$result .= $token;
 				$i++;
 			} elseif ($token['type'] === 'if') {
+				// Find the end of this IF block
 				$nesting = 0;
 				$else_index = null;
 				$endif_index = null;
@@ -1810,7 +1797,9 @@ class XTemplate
 					}
 				}
 
+				// Process IF content
 				if ($endif_index === null) {
+					// Unclosed IF block, process content without error here (handled at top level)
 					$if_content = $this->_process_tokens($tokens, $i + 1, $end);
 					if (empty($token['condition'])) {
 						$result .= $if_content;

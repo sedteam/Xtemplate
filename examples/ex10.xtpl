@@ -1,0 +1,70 @@
+<!-- BEGIN: MAIN -->
+<h1>Advanced Condition Test</h1>
+
+<!-- IF USER_AGE > 18 -->
+  <p>{USERNAME} is over 18 (age: {USER_AGE}).</p>
+<!-- ELSE -->
+  <p>{USERNAME} is 18 or younger (age: {USER_AGE}).</p>
+<!-- ENDIF -->
+
+<!-- IF POST_COUNT >= 10 -->
+  <p>You have {POST_COUNT} posts, which is 10 or more.</p>
+  <!-- IF POST_COUNT <= 50 -->
+    <p>Your post count ({POST_COUNT}) is between 10 and 50.</p>
+  <!-- ELSE -->
+    <p>Your post count ({POST_COUNT}) exceeds 50.</p>
+  <!-- ENDIF -->
+<!-- ELSE -->
+  <p>You have {POST_COUNT} posts, which is less than 10.</p>
+<!-- ENDIF -->
+
+<!-- IF USER_ROLE == "admin" -->
+  <p>{USERNAME} is an admin.</p>
+<!-- ELSE -->
+  <p>{USERNAME} is not an admin (role: {USER_ROLE}).</p>
+<!-- ENDIF -->
+
+<!-- IF USER_SCORE != 0 -->
+  <p>Your score is {USER_SCORE}, not zero.</p>
+<!-- ELSE -->
+  <p>Your score is zero.</p>
+<!-- ENDIF -->
+
+<!-- IF USER_AGE > 20 && POST_COUNT > 5 -->
+  <p>{USERNAME} is over 20 and has more than 5 posts (age: {USER_AGE}, posts: {POST_COUNT}).</p>
+<!-- ELSE -->
+  <p>{USERNAME} doesn’t meet both conditions (age: {USER_AGE}, posts: {POST_COUNT}).</p>
+<!-- ENDIF -->
+
+<!-- IF USER_SCORE < 10 || USER_ROLE == "moderator" -->
+  <p>Either score ({USER_SCORE}) is less than 10 or role is moderator ({USER_ROLE}).</p>
+<!-- ELSE -->
+  <p>Neither score < 10 nor moderator role (score: {USER_SCORE}, role: {USER_ROLE}).</p>
+<!-- ENDIF -->
+
+<!-- IF TOTAL_SCORE / POST_COUNT > 2 -->
+  <p>Average score per post ({TOTAL_SCORE} / {POST_COUNT}) is greater than 2.</p>
+<!-- ELSE -->
+  <p>Average score per post ({TOTAL_SCORE} / {POST_COUNT}) is 2 or less.</p>
+<!-- ENDIF -->
+
+<!-- IF (USER_SCORE + 5) * 2 > POST_COUNT -->
+  <p>Adjusted score (({USER_SCORE} + 5) * 2 = {(USER_SCORE + 5) * 2}) exceeds post count ({POST_COUNT}).</p>
+<!-- ELSE -->
+  <p>Adjusted score (({USER_SCORE} + 5) * 2 = {(USER_SCORE + 5) * 2}) is less than or equal to post count ({POST_COUNT}).</p>
+<!-- ENDIF -->
+
+<!-- IF USER_AGE - 10 >= POST_COUNT / 2 -->
+  <p>Age minus 10 ({USER_AGE} - 10 = {USER_AGE - 10}) is at least half of posts ({POST_COUNT} / 2 = {POST_COUNT / 2}).</p>
+<!-- ELSE -->
+  <p>Age minus 10 ({USER_AGE} - 10 = {USER_AGE - 10}) is less than half of posts ({POST_COUNT} / 2 = {POST_COUNT / 2}).</p>
+<!-- ENDIF -->
+
+<!-- IF (TOTAL_SCORE % POST_COUNT) == 0 && USER_ROLE != "user" -->
+  <p>Total score ({TOTAL_SCORE}) is evenly divisible by post count ({POST_COUNT}), and role ({USER_ROLE}) is not user.</p>
+<!-- ELSE -->
+  <p>Either total score ({TOTAL_SCORE}) is not divisible by post count ({POST_COUNT}), or role is user ({USER_ROLE}).</p>
+<!-- ENDIF -->
+
+<p>End of test.</p>
+<!-- END: MAIN -->

@@ -14,7 +14,7 @@
  * @version $Id: ex5.php 16 2007-01-11 03:02:49Z cocomp $
  */
 
-	include_once('./xtemplate.class.php');
+	include_once('../xtemplate.class.php');
 
 	$xtpl = new XTemplate('ex5.xtpl');
 

@@ -12,7 +12,7 @@
  * @version $Id: ex8.php 21 2007-05-29 18:01:15Z cocomp $
  */
 
-require_once('xtemplate.class.php');
+require_once('../xtemplate.class.php');
 $xtpl = new XTemplate('ex8.xtpl');
 
 // Config
